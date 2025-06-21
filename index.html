@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>わたしの高機能 古文単語帳</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <style>
+        /* (CSSはUI追加分のみ変更) */
+        :root{--primary-color:#593c1b;--secondary-color:#a47a47;--danger-color:#c0392b;--bg-color:#f4f1e9;--card-bg-color:#fff;--text-color:#333}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;background-color:var(--bg-color);color:var(--text-color);margin:0;padding:15px;box-sizing:border-box}.header{text-align:center;margin-bottom:20px;padding-bottom:15px}.header h1{color:var(--primary-color);margin:0;font-size:22px}.controls{margin-bottom:20px}.main-controls,.selection-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}.filter-sort-container{display:flex;gap:10px;width:100%;margin-bottom:10px}.search-box{flex-grow:1;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box}.sort-select{padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;background-color:#fff;flex-shrink:0}.action-btn,.export-btn{padding:10px 15px;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700}.main-controls .action-btn{flex-grow:1}#add-word-btn{background-color:var(--secondary-color)}#import-btn{background-color:#27ae60}#share-btn{background-color:#3498db}#selection-mode-btn{background-color:#95a5a6}#delete-all-btn{background-color:var(--danger-color)}.export-controls{position:relative}.export-btn{background-color:#8e44ad}.export-options{display:none;position:absolute;background-color:#fff;box-shadow:0 8px 16px rgba(0,0,0,.2);z-index:1;list-style:none;padding:0;margin:0;border-radius:8px;overflow:hidden;right:0;top:100%;margin-top:5px;width:max-content}.export-options li a{color:#000;padding:12px 16px;text-decoration:none;display:block;font-size:14px}.export-options li a:hover{background-color:#f1f1f1}.export-controls:hover .export-options{display:block}.selection-controls{display:none}#delete-selected-btn{background-color:var(--danger-color);flex-grow:1}#cancel-selection-btn{background-color:#7f8c8d;flex-grow:1}body.selection-mode-active .main-controls{display:none}body.selection-mode-active .selection-controls{display:flex}
+        .tag-filter-container{width:100%;text-align:center;padding-top:10px}.tag-filter{background-color:#fff;color:var(--secondary-color);border:1px solid var(--secondary-color);border-radius:15px;padding:5px 12px;margin:4px;cursor:pointer;transition:all .2s ease;font-size:13px}.tag-filter.active{background-color:var(--secondary-color);color:#fff;font-weight:700;border-color:var(--secondary-color)}
+        .status-bar{text-align:left;margin:10px 0;font-size:14px;color:#555}
+        .word-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px}.word-card{background-color:var(--card-bg-color);border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);padding:20px;display:flex;flex-direction:column;position:relative}.word-checkbox{display:none;position:absolute;top:15px;right:15px;width:25px;height:25px;cursor:pointer}body.selection-mode-active .word-checkbox{display:block}body.selection-mode-active .card-actions{display:none}.word-header{border-bottom:1px solid #f0f0f0;margin-bottom:15px;padding-bottom:15px}.word-title{font-size:26px;font-weight:700}.word-reading{font-size:15px;color:#666;margin-left:8px}.word-pos{font-size:14px;color:#888;margin-top:8px}.word-meanings{list-style:none;padding-left:0;margin:0}.word-meanings li{padding:12px 0;display:flex;align-items:flex-start;border-bottom:1px solid #f5f5f5}.word-meanings li:last-child{border-bottom:none}.meaning-number{font-size:16px;font-weight:700;color:var(--secondary-color);margin-right:12px;line-height:1.5}.meaning-content{flex:1}.meaning-text{display:block;font-size:16px;line-height:1.5}.tag{font-size:12px;font-weight:700;padding:3px 8px;border-radius:12px;margin-bottom:6px;display:inline-block;color:#fff}.tag.sonkei{background-color:#c0392b}.tag.kenjo{background-color:#2980b9}.tag.teinei{background-color:#27ae60}.details-section{margin-top:15px}.details-section summary{cursor:pointer;font-weight:700;color:var(--secondary-color);padding:10px 0;border-top:1px solid #f0f0f0}.details-content{padding-top:10px}.details-content p{margin:0 0 10px 0;white-space:pre-wrap;line-height:1.6}.word-image{max-width:100%;height:auto;border-radius:8px;margin-top:10px}.card-tags{margin-top:15px;padding-top:15px;border-top:1px solid #f0f0f0}.card-tag{background-color:#eee;color:#555;border-radius:5px;padding:4px 8px;font-size:12px;display:inline-block;margin-right:5px;margin-bottom:5px}.card-actions{margin-top:auto;padding-top:15px;text-align:right}.card-actions button{background:0 0;border:1px solid #ccc;border-radius:5px;padding:5px 10px;cursor:pointer;margin-left:5px}.card-actions .delete-btn{border-color:var(--danger-color);color:var(--danger-color)}
+        .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,.5)}.modal-content{background-color:#fefefe;margin:10vh auto;padding:25px;border:1px solid #888;width:90%;max-width:600px;border-radius:12px}.modal-content h2{margin-top:0;color:var(--primary-color)}.modal-content input,.modal-content select,.modal-content textarea{width:100%;padding:12px;margin-bottom:12px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;font-size:16px}.modal-content label{display:block;margin-bottom:5px;font-weight:700}#meanings-container .meaning-group{display:flex;gap:10px;margin-bottom:10px;align-items:center}#meanings-container .meaning-group input{flex-grow:1}#meanings-container .meaning-group select{width:120px;flex-shrink:0}#meanings-container .meaning-group button{width:35px;height:35px;border:1px solid #ccc;background:#f0f0f0;cursor:pointer;border-radius:8px;flex-shrink:0}.modal-actions{text-align:right;margin-top:20px}.modal-actions button{padding:12px 20px;border:none;border-radius:8px;cursor:pointer;margin-left:10px;font-weight:700}.modal-actions .save-btn{background-color:var(--secondary-color);color:#fff}.modal-actions .cancel-btn{background-color:#ccc}
+        .import-format-info p{margin:0;line-height:1.6}.import-format-info a{margin-top:10px;display:inline-block}
+    </style>
+</head>
+<body>
+
+    <header class="header"><h1>わたしの高機能 古文単語帳</h1></header>
+
+    <div class="controls">
+        <div class="main-controls">
+            <div class="filter-sort-container">
+                <input type="search" id="search-box" class="search-box" placeholder="単語、読み、意味で検索...">
+                <select id="sort-select" class="sort-select">
+                    <option value="date_desc">登録順（新しい順）</option>
+                    <option value="date_asc">登録順（古い順）</option>
+                    <option value="name_asc">名前順（あ→ん）</option>
+                    <option value="name_desc">名前順（ん→あ）</option>
+                </select>
+            </div>
+            <button id="add-word-btn" class="action-btn">新規単語を追加</button>
+            <button id="import-btn" class="action-btn">一括インポート</button>
+            <button id="share-btn" class="action-btn">共有リンク作成</button>
+            <div class="export-controls">
+                <button class="export-btn action-btn">エクスポート</button>
+                <ul class="export-options">
+                    <li><a href="#" id="export-json-btn">JSON形式で保存</a></li>
+                    <li><a href="#" id="export-csv-btn">CSV形式で保存</a></li>
+                    <li><a href="#" id="export-excel-btn">Excel形式で保存</a></li>
+                </ul>
+            </div>
+            <button id="selection-mode-btn" class="action-btn">選択</button>
+            <button id="delete-all-btn" class="action-btn">全削除</button>
+        </div>
+        <div class="selection-controls">
+            <button id="delete-selected-btn" class="action-btn">選択項目を削除</button>
+            <button id="cancel-selection-btn" class="action-btn">キャンセル</button>
+        </div>
+        <div id="tag-filter-container" class="tag-filter-container"></div>
+        <div class="status-bar">
+            <span>★ </span><span id="word-count-display"></span>
+        </div>
+    </div>
+
+    <div id="word-container" class="word-container"></div>
+
+    <div id="word-modal" class="modal"><div class="modal-content"><h2 id="modal-title">新規単語を追加</h2><form id="word-form"><input type="hidden" id="word-id"><label for="word-title-input">単語</label><input type="text" id="word-title-input" required><label for="word-reading-input">読み</label><input type="text" id="word-reading-input"><label for="word-pos-input">品詞</label><input type="text" id="word-pos-input"><label>意味</label><div id="meanings-container"></div><button type="button" id="add-meaning-btn" style="width: auto; padding: 5px 10px;">+ 意味を追加</button><hr style="margin: 20px 0;"><label for="word-example-input">例文</label><textarea id="word-example-input" rows="3"></textarea><label for="word-memo-input">メモ</label><textarea id="word-memo-input" rows="2"></textarea><label for="word-image-input">写真ファイル</label><input type="file" id="word-image-input" accept="image/*"><label for="word-tags-input">分類タグ (コンマ区切り)</label><input type="text" id="word-tags-input" placeholder="例: 敬語, 頻出, 試験範囲"><div class="modal-actions"><button type="button" class="cancel-btn">キャンセル</button><button type="submit" class="save-btn">保存</button></div></form></div></div>
+    <div id="import-modal" class="modal"><div class="modal-content"><h2>データをインポート</h2><p>JSON, CSV, Excel(.xlsx)ファイルを選択してください。</p><input type="file" id="import-file-input" accept=".json, .csv, .xlsx, .xls"><div id="import-format-info" style="margin-top: 15px; padding: 10px; background-color: #f8f8f8; border-radius: 5px;"><p><b>ファイル形式について</b><br>ファイルの1行目は、以下のヘッダーにしてください。<br><code>title,reading,pos,meanings,example,memo,tags</code><br><a href="#" id="download-excel-template-btn">Excel雛形</a> / <a href="#" id="download-csv-template-btn">CSV雛形</a>をダウンロード</p></div><div class="modal-actions"><button type="button" class="cancel-btn">キャンセル</button></div></div></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM要素の取得 ---
+        const wordCountDisplay = document.getElementById('word-count-display');
+        const shareBtn = document.getElementById('share-btn');
+        const exportExcelBtn = document.getElementById('export-excel-btn');
+        // (その他DOM取得は変更なし)
+        const body=document.body,wordContainer=document.getElementById("word-container"),searchBox=document.getElementById("search-box"),sortSelect=document.getElementById("sort-select"),tagFilterContainer=document.getElementById("tag-filter-container"),addWordBtn=document.getElementById("add-word-btn"),importBtn=document.getElementById("import-btn"),selectionModeBtn=document.getElementById("selection-mode-btn"),deleteAllBtn=document.getElementById("delete-all-btn"),deleteSelectedBtn=document.getElementById("delete-selected-btn"),cancelSelectionBtn=document.getElementById("cancel-selection-btn"),wordModal=document.getElementById("word-modal"),modalTitle=document.getElementById("modal-title"),wordForm=document.getElementById("word-form"),meaningsContainer=document.getElementById("meanings-container"),addMeaningBtn=document.getElementById("add-meaning-btn"),importModal=document.getElementById("import-modal"),importFileInput=document.getElementById("import-file-input"),downloadExcelTemplateBtn=document.getElementById("download-excel-template-btn"),downloadCsvTemplateBtn=document.getElementById("download-csv-template-btn"),exportJsonBtn=document.getElementById("export-json-btn"),exportCsvBtn=document.getElementById("export-csv-btn");
+
+        // --- 初期データ & 状態管理 ---
+        const initialWords = [ { id: 1, title: '参る', reading: 'まゐる', pos: 'ラ行四段活用', meanings: [ { type: 'kenjo', text: '参上する' }], example: '', memo: '', image: '', tags: ['敬語'] } ];
+        let words = []; let activeFilterTags = []; let isSelectionMode = false; let selectedWordIds = []; let currentSortOrder = 'date_desc';
+
+        // --- データ管理 & 変換関数 ---
+        const loadWords=()=>{const t=new URLSearchParams(window.location.search).get("data");if(t)try{words=JSON.parse(LZString.decompressFromBase64(t))}catch(e){console.error("共有データの復元に失敗:",e),words=JSON.parse(localStorage.getItem("kotanWords"))||initialWords}else words=JSON.parse(localStorage.getItem("kotanWords"))||initialWords},saveWords=()=>{localStorage.setItem("kotanWords",JSON.stringify(words))},downloadFile=(t,e,n)=>{const o=new Blob([t],{type:n}),d=URL.createObjectURL(o),a=document.createElement("a");a.href=d,a.download=e,document.body.appendChild(a),a.click(),document.body.removeChild(a),URL.revokeObjectURL(d)},processImportedData=t=>{return Array.isArray(t)?t.map(t=>{const e="string"==typeof t.tags?(t.tags||"").split(";").filter(t=>t):Array.isArray(t.tags)?t.tags:[];return{id:Date.now()+Math.random(),title:t.title||"",reading:t.reading||"",pos:t.pos||"",meanings:"string"==typeof t.meanings?(t.meanings||"").split(";").map(t=>{const e=t.split(":");return{type:e[0]||"none",text:e[1]||""}}).filter(t=>t.text):Array.isArray(t.meanings)?t.meanings:[],example:t.example||"",memo:t.memo||"",tags:e,image:""}}).filter(t=>t.title):Promise.reject(new Error("データは配列形式である必要があります。"))};
+
+        // --- 描画処理 ---
+        const render = () => {
+            body.classList.toggle('selection-mode-active', isSelectionMode);
+            let wordsToRender = [...words];
+            switch (currentSortOrder) {
+                case 'date_asc': wordsToRender.sort((a, b) => a.id - b.id); break;
+                case 'name_asc': wordsToRender.sort((a, b) => a.title.localeCompare(b.title, 'ja')); break;
+                case 'name_desc': wordsToRender.sort((a, b) => b.title.localeCompare(a.title, 'ja')); break;
+                default: wordsToRender.sort((a, b) => b.id - a.id); break;
+            }
+            if (activeFilterTags.length > 0) {
+                wordsToRender = wordsToRender.filter(word => activeFilterTags.some(filterTag => word.tags.includes(filterTag)));
+            }
+            const searchTerm = searchBox.value.toLowerCase();
+            if (searchTerm) {
+                wordsToRender = wordsToRender.filter(word => 
+                    word.title.toLowerCase().includes(searchTerm) || (word.reading && word.reading.toLowerCase().includes(searchTerm)) || word.meanings.some(m => m.text.toLowerCase().includes(searchTerm))
+                );
+            }
+            renderWordCards(wordsToRender);
+            renderTagFilters();
+            // ★★★ 単語数表示を更新 ★★★
+            wordCountDisplay.textContent = `${wordsToRender.length}件表示中 / 全${words.length}件`;
+        };
+
+        const renderWordCards = (wordsToRender) => {
+            wordContainer.innerHTML = '';
+            if (wordsToRender.length === 0) { wordContainer.innerHTML = '<p style="text-align: center; width: 100%;">該当する単語がありません。</p>'; return; }
+            wordsToRender.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.dataset.id = word.id;
+                const checkboxHTML = `<input type="checkbox" class="word-checkbox" data-id="${word.id}" ${selectedWordIds.includes(word.id) ? 'checked' : ''}>`;
+                const meaningsHTML = word.meanings.map((m, index) => `<li><span class="meaning-number">(${index + 1})</span><div class="meaning-content">${m.type !== 'none' ? `<span class="tag ${m.type}">${{sonkei:'尊敬',kenjo:'謙譲',teinei:'丁寧'}[m.type]}</span>` : ''}<span class="meaning-text">${m.text}</span></div></li>`).join('');
+                const tagsHTML = word.tags.map(tag => `<span class="card-tag">${tag}</span>`).join('');
+                const detailsHTML = (word.example || word.memo || word.image) ? `<div class="details-section"><details><summary>例文・メモ・写真</summary><div class="details-content">${word.example ? `<p><strong>例文:</strong> ${word.example}</p>` : ''}${word.memo ? `<p><strong>メモ:</strong> ${word.memo}</p>` : ''}${word.image ? `<img src="${word.image}" alt="${word.title}の画像" class="word-image">` : ''}</div></details></div>` : '';
+                card.innerHTML = `${checkboxHTML}<div class="word-header"><h2 class="word-title">${word.title}<span class="word-reading">(${word.reading||''})</span></h2><p class="word-pos">${word.pos||''}</p></div><ul class="word-meanings">${meaningsHTML}</ul>${detailsHTML}<div class="card-tags">${tagsHTML}</div><div class="card-actions"><button class="edit-btn">編集</button><button class="delete-btn">削除</button></div>`;
+                wordContainer.appendChild(card);
+            });
+        };
+        
+        const renderTagFilters = () => {
+            const allTags = [...new Set(words.flatMap(w => w.tags))].sort();
+            tagFilterContainer.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.className = 'tag-filter';
+             // ★★★ タグごとの単語数表示 ★★★
+            allBtn.textContent = `すべて表示 (${words.length})`;
+            if (activeFilterTags.length === 0) { allBtn.classList.add('active'); }
+            allBtn.addEventListener('click', () => { activeFilterTags = []; render(); });
+            tagFilterContainer.appendChild(allBtn);
+            allTags.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.className = 'tag-filter';
+                const count = words.filter(w => w.tags.includes(tag)).length;
+                btn.textContent = `${tag} (${count})`;
+                if (activeFilterTags.includes(tag)) { btn.classList.add('active'); }
+                btn.addEventListener('click', () => {
+                    const index = activeFilterTags.indexOf(tag);
+                    if (index > -1) { activeFilterTags.splice(index, 1); } else { activeFilterTags.push(tag); }
+                    render();
+                });
+                tagFilterContainer.appendChild(btn);
+            });
+        };
+
+        // --- イベントハンドラ ---
+        searchBox.addEventListener('input', render);
+        sortSelect.addEventListener('change', (e) => { currentSortOrder = e.target.value; render(); });
+
+        shareBtn.addEventListener('click', () => {
+            try {
+                const jsonString = JSON.stringify(words);
+                const compressedString = LZString.compressToBase64(jsonString);
+                const shareUrl = `${window.location.href.split('?')[0]}?data=${compressedString}`;
+                navigator.clipboard.writeText(shareUrl)
+                    .then(() => alert('共有リンクがクリップボードにコピーされました！\n注意: データ量が多い場合、リンクが機能しないことがあります。'))
+                    .catch(() => alert('クリップボードへのコピーに失敗しました。'));
+            } catch (error) {
+                alert('共有リンクの作成に失敗しました。');
+            }
+        });
+
+        exportJsonBtn.addEventListener('click', (e) => { e.preventDefault(); downloadFile(JSON.stringify(words, null, 2), 'kotan-export.json', 'application/json'); });
+        exportCsvBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const header = "title,reading,pos,meanings,example,memo,tags";
+            const rows = words.map(word => {
+                const row = [word.title, word.reading, word.pos, word.meanings.map(m=>`${m.type}:${m.text}`).join(';'), word.example, word.memo, word.tags.join(';')];
+                return row.map(val => `"${(val || '').toString().replace(/"/g, '""')}"`).join(',');
+            });
+            downloadFile([header, ...rows].join('\n'), 'kotan-export.csv', 'text/csv;charset=utf-8;');
+        });
+        exportExcelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const dataToExport = words.map(word => ({
+                ...word,
+                meanings: word.meanings.map(m => `${m.type}:${m.text}`).join(';'),
+                tags: word.tags.join(';')
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "単語リスト");
+            XLSX.writeFile(wb, "kotan-export.xlsx");
+        });
+        
+        const templateData = [{ title: 'あはれなり', reading: 'あはれなり', pos: 'ナリ活用 形容動詞', meanings: 'none:しみじみと心に深く感じられる;none:気の毒だ', example: '', memo: '重要語', tags: '重要語;形容動詞' }];
+        downloadExcelTemplateBtn.addEventListener('click',(e)=>{e.preventDefault();const t=XLSX.utils.json_to_sheet(templateData),n=XLSX.utils.book_new();XLSX.utils.book_append_sheet(n,t,"単語リスト"),XLSX.writeFile(n,"template.xlsx")});
+        downloadCsvTemplateBtn.addEventListener('click',(e)=>{e.preventDefault();const t="title,reading,pos,meanings,example,memo,tags",n='"あはれなり","あはれなり","ナリ活用 形容動詞","none:しみじみと心に深く感じられる;none:気の毒だ","","重要語","重要語;形容動詞"';downloadFile([t,n].join("\n"),"template.csv","text/csv;charset=utf-8;")});
+        
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    let parsedData; const fileName = file.name.toLowerCase();
+                    if (fileName.endsWith('.json')) { parsedData = JSON.parse(event.target.result); } 
+                    else if (fileName.endsWith('.csv')) { const workbook = XLSX.read(event.target.result, { type: 'string' }); parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); } 
+                    else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) { const workbook = XLSX.read(event.target.result, { type: 'array' }); parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); } 
+                    else { throw new Error('サポートされていないファイル形式です。'); }
+                    const newWords = processImportedData(parsedData); words.push(...newWords);
+                    saveWords(); render(); closeModal(importModal);
+                    alert(`${newWords.length}件の単語が正常に追加されました。`);
+                } catch (error) { alert('ファイルの読み込みエラー\n' + error.message); } 
+                finally { importFileInput.value = ''; }
+            };
+            if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) { reader.readAsArrayBuffer(file); } 
+            else { reader.readAsText(file); }
+        });
+        
+        // (その他のイベントハンドラは変更なし)
+        wordContainer.addEventListener("click",t=>{const e=t.target.closest(".word-card");if(e){if(t.target.classList.contains("edit-btn")){const n=parseFloat(e.dataset.id),o=words.find(t=>t.id===n);o&&openModal(o)}if(t.target.classList.contains("delete-btn")){const n=parseFloat(e.dataset.id);confirm("この単語を削除しますか？")&&(words=words.filter(t=>t.id!==n),saveWords(),render())}}}),wordContainer.addEventListener("change",t=>{if(t.target.classList.contains("word-checkbox")){const e=parseFloat(t.target.dataset.id);t.target.checked?selectedWordIds.includes(e)||selectedWordIds.push(e):selectedWordIds=selectedWordIds.filter(t=>t!==e)}}),selectionModeBtn.addEventListener("click",()=>{isSelectionMode=!0,selectedWordIds=[],render()}),cancelSelectionBtn.addEventListener("click",()=>{isSelectionMode=!1,selectedWordIds=[],render()}),deleteSelectedBtn.addEventListener("click",()=>{0!==selectedWordIds.length?confirm(`選択した ${selectedWordIds.length} 件の単語を削除しますか？`)&&(words=words.filter(t=>!selectedWordIds.includes(t.id)),saveWords(),isSelectionMode=!1,selectedWordIds=[],render()):alert("削除する単語が選択されていません。")}),deleteAllBtn.addEventListener("click",()=>{confirm("本当にすべての単語を削除しますか？")&&confirm("この操作は元に戻せません。本当によろしいですか？")&&(words=[],saveWords(),render())});const openModal=t=>{wordForm.reset(),meaningsContainer.innerHTML="",t?(modalTitle.textContent="単語を編集",document.getElementById("word-id").value=t.id,document.getElementById("word-title-input").value=t.title,document.getElementById("word-reading-input").value=t.reading,document.getElementById("word-pos-input").value=t.pos,t.meanings.forEach(addMeaningInput),document.getElementById("word-example-input").value=t.example,document.getElementById("word-memo-input").value=t.memo,document.getElementById("word-image-input").value="",document.getElementById("word-tags-input").value=t.tags.join(", ")):(modalTitle.textContent="新規単語を追加",document.getElementById("word-id").value="",addMeaningInput()),wordModal.style.display="block"},closeModal=t=>{t.style.display="none"},addMeaningInput=t=>{t||(t={type:"none",text:""});const e=document.createElement("div");e.className="meaning-group",e.innerHTML=`<select><option value="none" ${"none"===t.type?"selected":""}>分類なし</option><option value="sonkei" ${"sonkei"===t.type?"selected":""}>尊敬語</option><option value="kenjo" ${"kenjo"===t.type?"selected":""}>謙譲語</option><option value="teinei" ${"teinei"===t.type?"selected":""}>丁寧語</option></select><input type="text" value="${t.text}" placeholder="意味を入力" required><button type="button" class="remove-meaning-btn">×</button>`,meaningsContainer.appendChild(e),e.querySelector(".remove-meaning-btn").addEventListener("click",()=>e.remove())};addWordBtn.addEventListener("click",()=>openModal()),addMeaningBtn.addEventListener("click",()=>addMeaningInput()),wordForm.addEventListener("submit",async t=>{t.preventDefault();const e=document.getElementById("word-id").value,n=Array.from(meaningsContainer.querySelectorAll(".meaning-group")).map(t=>({type:t.querySelector("select").value,text:t.querySelector('input[type="text"]').value})),o=document.getElementById("word-image-input");let d="";if(o.files[0])d=await new Promise(t=>{const e=new FileReader;e.onload=()=>t(e.result),e.readAsDataURL(o.files[0])});else if(e){const t=words.find(t=>t.id===parseFloat(e));d=t?t.image:""}const i={id:e?parseFloat(e):Date.now(),title:document.getElementById("word-title-input").value,reading:document.getElementById("word-reading-input").value,pos:document.getElementById("word-pos-input").value,meanings:n,example:document.getElementById("word-example-input").value,memo:document.getElementById("word-memo-input").value,image:d,tags:document.getElementById("word-tags-input").value.split(",").map(t=>t.trim()).filter(t=>t)};e?words=words.map(t=>t.id===i.id?i:t):words.push(i),saveWords(),render(),closeModal(wordModal)}),importBtn.addEventListener("click",()=>{importModal.style.display="block"}),wordModal.querySelector(".cancel-btn").addEventListener("click",()=>closeModal(wordModal)),importModal.querySelector(".cancel-btn").addEventListener("click",()=>closeModal(importModal)),window.addEventListener("click",t=>{t.target===wordModal&&closeModal(wordModal),t.target===importModal&&closeModal(importModal)});
+
+        // --- 初期化処理 ---
+        loadWords();
+        render();
+    });
+    </script>
+</body>
+</html>
